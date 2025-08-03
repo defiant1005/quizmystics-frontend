@@ -7,6 +7,9 @@ import path from "path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import VueDevTools from "vite-plugin-vue-devtools";
 import { fileURLToPath } from "node:url";
+import AutoImport from "unplugin-auto-import/vite";
+import Components from "unplugin-vue-components/vite";
+import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +28,12 @@ export default defineConfig({
     VueDevTools({
       componentInspector: false,
       launchEditor: "webstorm",
+    }),
+    AutoImport({
+      resolvers: [ElementPlusResolver()],
+    }),
+    Components({
+      resolvers: [ElementPlusResolver()],
     }),
   ],
 
