@@ -22,7 +22,5 @@ defineComponent({
 .post-card {
   width: 300px;
   height: 200px;
-
-  @include caption;
 }
 </style>
