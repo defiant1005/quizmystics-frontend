@@ -22,6 +22,12 @@
       "path": "./tsconfig.node.json"
     }
   ],
-  "include": ["src", "env.d.ts"],
+  "include": [
+    "src",
+    "env.d.ts",
+    "node_modules/unplugin-auto-import/auto-imports.d.ts",
+    "node_modules/unplugin-auto-import/auto-imports.d.ts",
+    "node_modules/unplugin-auto-import/auto-imports.d.ts"
+  ],
   "exclude": ["vite.config.ts", "node_modules", "dist"]
 }

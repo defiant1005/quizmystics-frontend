@@ -1,1 +1,170 @@
-// stylelint-disable-next-line
+@mixin h1 {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 700;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 56px;
+
+    @media (width <= 1023px) {
+      font-size: 32px;
+      line-height: 40px;
+    }
+  }
+}
+
+@mixin h2 {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 40px;
+    font-style: normal;
+    font-weight: 700;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 48px;
+
+    @media (width <= 1023px) {
+      font-size: 28px;
+      line-height: 36px;
+    }
+  }
+}
+
+@mixin h3 {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 700;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 40px;
+
+    @media (width <= 1023px) {
+      font-size: 24px;
+      line-height: 32px;
+    }
+  }
+}
+
+@mixin h4 {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 700;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 32px;
+
+    @media (width <= 1023px) {
+      font-size: 20px;
+      line-height: 28px;
+    }
+  }
+}
+
+@mixin h5 {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 24px;
+  }
+}
+
+@mixin body-L {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 28px;
+
+    @media (width <= 1023px) {
+      font-size: 16px;
+      line-height: 24px;
+    }
+  }
+}
+
+@mixin body-M {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 24px;
+
+    @media (width <= 1023px) {
+      font-size: 14px;
+      line-height: 20px;
+    }
+  }
+}
+
+@mixin body-S {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 20px;
+
+    @media (width <= 1023px) {
+      font-size: 12px;
+      line-height: 18px;
+    }
+  }
+}
+
+@mixin body-bold-L {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 28px;
+
+    @media (width <= 1023px) {
+      font-size: 16px;
+      line-height: 24px;
+    }
+  }
+}
+
+@mixin body-bold-M {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 24px;
+
+    @media (width <= 1023px) {
+      font-size: 14px;
+      line-height: 20px;
+    }
+  }
+}
+
+@mixin body-bold-S {
+  & {
+    font-family: Caveat, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    font-variant-numeric: lining-nums proportional-nums;
+    line-height: 20px;
+
+    @media (width <= 1023px) {
+      font-size: 12px;
+      line-height: 18px;
+    }
+  }
+}

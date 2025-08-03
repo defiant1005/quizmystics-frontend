@@ -1,1 +1,19 @@
-// какие-то глобальные стили проекта
+@use "mixins.scss" as *;
+
+.main-container {
+  width: 100%;
+  max-width: 1200px;
+  padding: 32px;
+  margin: 0 auto;
+
+  @media (width >= 767px) {
+    max-width: 100%;
+    padding: 16px;
+  }
+}
+
+.el-button {
+  margin: 0 !important;
+
+  @include body-L;
+}
