@@ -2,6 +2,8 @@
 import { generateRandomUppercaseString } from "@/package/helpers/generate-random-uppercase-string";
 import { useRouter } from "vue-router";
 import { RouteNames } from "@/router/routes";
+import socket from "@/package/config/socket";
+import { onMounted } from "vue";
 
 defineOptions({
   name: "HomePage",
@@ -12,11 +14,23 @@ const router = useRouter();
 const createRoom = () => {
   const roomId = generateRandomUppercaseString();
 
+  socket.emit("createRoom", { roomId: roomId });
+};
+
+const enterRoom = () => {
   router.push({
-    name: RouteNames.CREATE_ROOM,
-    params: { id: roomId },
+    name: RouteNames.ENTER_ROOM,
   });
 };
+
+onMounted(() => {
+  socket.on("roomCreated", ({ roomId, hostId }) => {
+    router.push({
+      name: RouteNames.CURRENT_ROOM,
+      params: { id: roomId },
+    });
+  });
+});
 </script>
 
 <template>
@@ -28,7 +42,9 @@ const createRoom = () => {
         <ElButton size="large" type="success" @click="createRoom">
           Создать комнату
         </ElButton>
-        <ElButton size="large" type="primary">Войти в комнату</ElButton>
+        <ElButton size="large" type="primary" @click="enterRoom">
+          Войти в комнату
+        </ElButton>
       </div>
     </div>
   </div>

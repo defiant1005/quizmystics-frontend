@@ -65,7 +65,7 @@
 @mixin h5 {
   & {
     font-family: Caveat, sans-serif;
-    font-size: 16px;
+    font-size: 18px;
     font-style: normal;
     font-weight: 700;
     font-variant-numeric: lining-nums proportional-nums;
@@ -83,7 +83,7 @@
     line-height: 28px;
 
     @media (width <= 1023px) {
-      font-size: 16px;
+      font-size: 18px;
       line-height: 24px;
     }
   }
@@ -92,16 +92,11 @@
 @mixin body-M {
   & {
     font-family: Caveat, sans-serif;
-    font-size: 16px;
+    font-size: 20px;
     font-style: normal;
     font-weight: 400;
     font-variant-numeric: lining-nums proportional-nums;
     line-height: 24px;
-
-    @media (width <= 1023px) {
-      font-size: 14px;
-      line-height: 20px;
-    }
   }
 }
 
@@ -131,7 +126,7 @@
     line-height: 28px;
 
     @media (width <= 1023px) {
-      font-size: 16px;
+      font-size: 18px;
       line-height: 24px;
     }
   }
@@ -140,7 +135,7 @@
 @mixin body-bold-M {
   & {
     font-family: Caveat, sans-serif;
-    font-size: 16px;
+    font-size: 18px;
     font-style: normal;
     font-weight: 600;
     font-variant-numeric: lining-nums proportional-nums;

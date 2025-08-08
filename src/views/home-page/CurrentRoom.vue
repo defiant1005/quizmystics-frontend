@@ -1,14 +1,18 @@
 <script lang="ts" setup>
 import { useRouteParams } from "@vueuse/router";
 import { Check, CopyDocument } from "@element-plus/icons-vue";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { ElNotification } from "element-plus";
+import { usePlayersStore } from "@/modules/player/store";
 
 defineOptions({
-  name: "CreateRoom",
+  name: "CurrentRoom",
 });
 
 const isCheck = ref(false);
+
+const playersStore = usePlayersStore();
+const playersList = computed(() => playersStore.players);
 
 const currentIcon = computed(() => (isCheck.value ? Check : CopyDocument));
 
@@ -28,6 +32,8 @@ const copyRoomId = async () => {
     console.error(error);
   }
 };
+
+onMounted(() => {});
 </script>
 
 <template>
@@ -42,6 +48,12 @@ const copyRoomId = async () => {
           </ElIcon>
         </span>
       </p>
+
+      <div class="create-room__players-list">
+        <p v-for="player in playersList" :key="player.id">
+          {{ player.id }}
+        </p>
+      </div>
     </div>
   </div>
 </template>

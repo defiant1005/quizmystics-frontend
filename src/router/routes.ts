@@ -4,13 +4,15 @@ export enum RouteNames {
   MAIN_LAYOUT = "MainLayout",
   HOME_VIEW = "HomeView",
   NOT_FOUND = "NotFound",
-  CREATE_ROOM = "CreateRoom",
+  CURRENT_ROOM = "CurrentRoom",
+  ENTER_ROOM = "EnterRoom",
 }
 
 export const RoutePaths: Record<RouteNames, string> = {
   [RouteNames.MAIN_LAYOUT]: "/",
   [RouteNames.HOME_VIEW]: "",
-  [RouteNames.CREATE_ROOM]: "/room/:id",
+  [RouteNames.CURRENT_ROOM]: "/room/:id",
+  [RouteNames.ENTER_ROOM]: "/enter-room",
   [RouteNames.NOT_FOUND]: "/:pathMatch(.*)*",
 };
 
@@ -26,9 +28,9 @@ export const routes: RouteRecordRaw[] = [
         component: () => import("@/views/home-page/HomePage.vue"),
       },
       {
-        path: RoutePaths.CreateRoom,
-        name: RouteNames.CREATE_ROOM,
-        component: () => import("@/views/home-page/CreateRoom.vue"),
+        path: RoutePaths.CurrentRoom,
+        name: RouteNames.CURRENT_ROOM,
+        component: () => import("@/views/home-page/CurrentRoom.vue"),
         beforeEnter(to) {
           if (to.params.id.length !== 4) {
             return {
@@ -36,6 +38,11 @@ export const routes: RouteRecordRaw[] = [
             };
           }
         },
+      },
+      {
+        path: RoutePaths.EnterRoom,
+        name: RouteNames.ENTER_ROOM,
+        component: () => import("@/views/home-page/EnterRoom.vue"),
       },
     ],
   },
