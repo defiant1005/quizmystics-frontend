@@ -1,28 +1,27 @@
 <script lang="ts" setup>
+import { useCreateRoomForm } from "@/modules/game/composables/use-create-room-form";
+import { useGameStore } from "@/modules/game/store";
 import { computed, onMounted } from "vue";
+import { FormInstance } from "element-plus";
 import socket from "@/package/config/socket";
-import { useRouter } from "vue-router";
-import { RouteNames } from "@/router/routes";
 import {
   ClientToServerEvents,
   ServerToClientEvents,
 } from "@/modules/socket/types";
-import { useGameStore } from "@/modules/game/store";
-import { useEnterRoomForm } from "@/modules/game/composables/use-enter-room-form";
-import { FormInstance } from "element-plus";
+import { generateRandomUppercaseString } from "@/package/helpers/generate-random-uppercase-string";
+import { useRouter } from "vue-router";
+import { RouteNames } from "@/router/routes";
 
 defineOptions({
-  name: "EnterRoom",
+  name: "CreateRoom",
 });
 
+const { createRoomFormRef, createRoomForm, rules } = useCreateRoomForm();
+
 const gameStore = useGameStore();
+const router = useRouter();
 
 const characterOptions = computed(() => gameStore.characterOptions);
-
-const { enterRoomForm, enterRoomFormRef, rules, convertToUppercase } =
-  useEnterRoomForm();
-
-const router = useRouter();
 
 const submitForm = async (formEl: FormInstance | undefined) => {
   if (!formEl) {
@@ -31,22 +30,22 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 
   await formEl.validate((valid) => {
     if (valid) {
-      socket.emit(ClientToServerEvents.ENTER_ROOM, {
-        name: enterRoomForm.name,
-        roomId: enterRoomForm.roomId,
-        characterId: enterRoomForm.characterId,
+      const roomId = generateRandomUppercaseString();
+
+      socket.emit(ClientToServerEvents.CREATE_ROOM, {
+        name: createRoomForm.name,
+        roomId: roomId,
+        characterId: createRoomForm.characterId,
       });
     }
   });
 };
 
 onMounted(() => {
-  socket.on(ServerToClientEvents.PLAYER_JOINED, ({ roomId, socketId }) => {
-    router.replace({
+  socket.on(ServerToClientEvents.ROOM_CREATED, ({ roomId, socketId }) => {
+    router.push({
       name: RouteNames.CURRENT_ROOM,
-      params: {
-        id: roomId,
-      },
+      params: { id: roomId },
     });
 
     gameStore.setRoom(roomId, socketId);
@@ -55,19 +54,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="enter-room">
+  <div class="create-room">
     <div class="main-container">
       <ElForm
-        ref="enterRoomFormRef"
+        ref="createRoomFormRef"
         label-position="top"
         style="max-width: 600px"
-        :model="enterRoomForm"
+        :model="createRoomForm"
         :rules="rules"
         label-width="auto"
       >
         <ElFormItem label="Имя" prop="name">
           <ElInput
-            v-model="enterRoomForm.name"
+            v-model="createRoomForm.name"
             type="text"
             clearable
             size="large"
@@ -75,21 +74,9 @@ onMounted(() => {
           />
         </ElFormItem>
 
-        <ElFormItem label="Номер комнаты" prop="roomId">
-          <ElInput
-            v-model="enterRoomForm.roomId"
-            maxlength="4"
-            type="text"
-            clearable
-            size="large"
-            placeholder="Введите номер комнаты"
-            @input="convertToUppercase"
-          />
-        </ElFormItem>
-
         <ElFormItem label="Класс персонажа" prop="characterId">
           <ElSelect
-            v-model="enterRoomForm.characterId"
+            v-model="createRoomForm.characterId"
             placeholder="Выберите класс персонажа"
             size="large"
           >
@@ -105,7 +92,7 @@ onMounted(() => {
         <ElButton
           size="large"
           type="success"
-          @click="submitForm(enterRoomFormRef)"
+          @click="submitForm(createRoomFormRef)"
         >
           Войти
         </ElButton>
@@ -115,7 +102,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.enter-room {
+.create-room {
   display: flex;
   align-items: center;
   justify-content: center;

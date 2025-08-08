@@ -4,6 +4,7 @@ export enum RouteNames {
   MAIN_LAYOUT = "MainLayout",
   HOME_VIEW = "HomeView",
   NOT_FOUND = "NotFound",
+  CREATE_ROOM = "CreateRoom",
   CURRENT_ROOM = "CurrentRoom",
   ENTER_ROOM = "EnterRoom",
 }
@@ -11,6 +12,7 @@ export enum RouteNames {
 export const RoutePaths: Record<RouteNames, string> = {
   [RouteNames.MAIN_LAYOUT]: "/",
   [RouteNames.HOME_VIEW]: "",
+  [RouteNames.CREATE_ROOM]: "/create-room",
   [RouteNames.CURRENT_ROOM]: "/room/:id",
   [RouteNames.ENTER_ROOM]: "/enter-room",
   [RouteNames.NOT_FOUND]: "/:pathMatch(.*)*",
@@ -26,6 +28,11 @@ export const routes: RouteRecordRaw[] = [
         path: RoutePaths.HomeView,
         name: RouteNames.HOME_VIEW,
         component: () => import("@/views/home-page/HomePage.vue"),
+      },
+      {
+        path: RoutePaths.CreateRoom,
+        name: RouteNames.CREATE_ROOM,
+        component: () => import("@/views/home-page/CreateRoom.vue"),
       },
       {
         path: RoutePaths.CurrentRoom,

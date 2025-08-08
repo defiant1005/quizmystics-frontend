@@ -1,9 +1,6 @@
 <script lang="ts" setup>
-import { generateRandomUppercaseString } from "@/package/helpers/generate-random-uppercase-string";
 import { useRouter } from "vue-router";
 import { RouteNames } from "@/router/routes";
-import socket from "@/package/config/socket";
-import { onMounted } from "vue";
 
 defineOptions({
   name: "HomePage",
@@ -12,9 +9,9 @@ defineOptions({
 const router = useRouter();
 
 const createRoom = () => {
-  const roomId = generateRandomUppercaseString();
-
-  socket.emit("createRoom", { roomId: roomId });
+  router.push({
+    name: RouteNames.CREATE_ROOM,
+  });
 };
 
 const enterRoom = () => {
@@ -22,15 +19,6 @@ const enterRoom = () => {
     name: RouteNames.ENTER_ROOM,
   });
 };
-
-onMounted(() => {
-  socket.on("roomCreated", ({ roomId, hostId }) => {
-    router.push({
-      name: RouteNames.CURRENT_ROOM,
-      params: { id: roomId },
-    });
-  });
-});
 </script>
 
 <template>

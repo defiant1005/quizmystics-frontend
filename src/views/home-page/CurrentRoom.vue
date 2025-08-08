@@ -3,7 +3,8 @@ import { useRouteParams } from "@vueuse/router";
 import { Check, CopyDocument } from "@element-plus/icons-vue";
 import { computed, onMounted, ref } from "vue";
 import { ElNotification } from "element-plus";
-import { usePlayersStore } from "@/modules/player/store";
+import { useGameStore } from "@/modules/game/store";
+import PlayerCard from "@/modules/game/components/PlayerCard.vue";
 
 defineOptions({
   name: "CurrentRoom",
@@ -11,7 +12,7 @@ defineOptions({
 
 const isCheck = ref(false);
 
-const playersStore = usePlayersStore();
+const playersStore = useGameStore();
 const playersList = computed(() => playersStore.players);
 
 const currentIcon = computed(() => (isCheck.value ? Check : CopyDocument));
@@ -50,9 +51,11 @@ onMounted(() => {});
       </p>
 
       <div class="create-room__players-list">
-        <p v-for="player in playersList" :key="player.id">
-          {{ player.id }}
-        </p>
+        <PlayerCard
+          v-for="player in playersList"
+          :key="player.id"
+          :player="player"
+        />
       </div>
     </div>
   </div>
