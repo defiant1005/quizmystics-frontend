@@ -50,19 +50,15 @@ const toggleReady = () => {
 
 const modelAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 
-const isCurrentUser = true;
+const isCurrentUser = computed(() => gameStore.name === props.player?.username);
 </script>
 
 <template>
-  <div
-    class="player-card"
-    :class="{
-      'player-card_ready': isReady,
-      'player-card_current-user': isCurrentUser,
-    }"
-  >
+  <div class="player-card" :class="{ 'player-card_ready': isReady }">
+    <div v-if="isReady" class="ready-badge">✅ Готов</div>
+
     <div class="header">
-      <div class="avatar">
+      <div class="avatar" :class="{ 'current-user': isCurrentUser }">
         <img :src="modelAvatar" alt="avatar" />
       </div>
       <div class="info">
@@ -96,7 +92,12 @@ const isCurrentUser = true;
       </div>
     </div>
 
-    <button type="button" class="ready-btn" @click="toggleReady">
+    <button
+      v-if="isCurrentUser"
+      type="button"
+      class="ready-btn"
+      @click="toggleReady"
+    >
       {{ isReady ? "✅ Готов" : "🚀 Готов?" }}
     </button>
   </div>
@@ -104,6 +105,7 @@ const isCurrentUser = true;
 
 <style lang="scss" scoped>
 .player-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -120,9 +122,17 @@ const isCurrentUser = true;
     border-color: #4caf50;
   }
 
-  &_current-user {
-    border-color: #ffeb3b;
-    box-shadow: 0 0 12px rgb(255 235 59 / 70%);
+  .ready-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    background: #4caf50;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 30%);
   }
 
   .header {
@@ -131,12 +141,19 @@ const isCurrentUser = true;
     align-items: center;
 
     .avatar {
+      position: relative;
       width: 60px;
       height: 60px;
       overflow: hidden;
       background: #333;
       border: 2px solid #444;
       border-radius: 50%;
+      transition: box-shadow 0.3s ease;
+
+      &.current-user {
+        border-color: #ffeb3b;
+        box-shadow: 0 0 12px 3px rgb(255 235 59 / 80%);
+      }
 
       img {
         width: 100%;
