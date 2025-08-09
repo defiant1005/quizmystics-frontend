@@ -1,6 +1,6 @@
 import { reactive, ref } from "vue";
-import { ICreateRoomForm } from "@/modules/game/types";
 import { FormInstance, FormRules } from "element-plus";
+import { ICreateRoomForm } from "@/modules/game/types/frontend-types";
 
 export function useCreateRoomForm() {
   const createRoomForm = reactive<ICreateRoomForm>({

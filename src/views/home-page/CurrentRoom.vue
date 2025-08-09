@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useRouteParams } from "@vueuse/router";
 import { Check, CopyDocument } from "@element-plus/icons-vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { ElNotification } from "element-plus";
 import { useGameStore } from "@/modules/game/store";
 import PlayerCard from "@/modules/game/components/PlayerCard.vue";
@@ -12,8 +12,8 @@ defineOptions({
 
 const isCheck = ref(false);
 
-const playersStore = useGameStore();
-const playersList = computed(() => playersStore.players);
+const gameStore = useGameStore();
+const playersList = computed(() => gameStore.players);
 
 const currentIcon = computed(() => (isCheck.value ? Check : CopyDocument));
 
@@ -33,8 +33,6 @@ const copyRoomId = async () => {
     console.error(error);
   }
 };
-
-onMounted(() => {});
 </script>
 
 <template>

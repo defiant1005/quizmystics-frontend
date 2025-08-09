@@ -3,21 +3,26 @@ import { computed, onMounted } from "vue";
 import socket from "@/package/config/socket";
 import { useRouter } from "vue-router";
 import { RouteNames } from "@/router/routes";
-import {
-  ClientToServerEvents,
-  ServerToClientEvents,
-} from "@/modules/socket/types";
+
 import { useGameStore } from "@/modules/game/store";
 import { useEnterRoomForm } from "@/modules/game/composables/use-enter-room-form";
 import { FormInstance } from "element-plus";
+import { useCharacterStore } from "@/modules/character/store";
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from "@/modules/game/types/socket-types";
+import { ISuccessEnterResponse } from "@/modules/game/types/server-client-response-types";
+import { IInterRoomParams } from "@/modules/game/types/client-server-response-types";
 
 defineOptions({
   name: "EnterRoom",
 });
 
 const gameStore = useGameStore();
+const characterStore = useCharacterStore();
 
-const characterOptions = computed(() => gameStore.characterOptions);
+const characterOptions = computed(() => characterStore.characterOptions);
 
 const { enterRoomForm, enterRoomFormRef, rules, convertToUppercase } =
   useEnterRoomForm();
@@ -31,26 +36,31 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 
   await formEl.validate((valid) => {
     if (valid) {
-      socket.emit(ClientToServerEvents.ENTER_ROOM, {
+      const params: IInterRoomParams = {
         name: enterRoomForm.name,
         roomId: enterRoomForm.roomId,
-        characterId: enterRoomForm.characterId,
-      });
+        characterId: enterRoomForm.characterId as number,
+      };
+
+      socket.emit(ClientToServerEvents.ENTER_ROOM, params);
     }
   });
 };
 
 onMounted(() => {
-  socket.on(ServerToClientEvents.SET_PLAYERS, ({ roomId, name }) => {
-    router.replace({
-      name: RouteNames.CURRENT_ROOM,
-      params: {
-        id: roomId,
-      },
-    });
+  socket.on(
+    ServerToClientEvents.SUCCESS_ENTER,
+    (data: ISuccessEnterResponse) => {
+      router.replace({
+        name: RouteNames.CURRENT_ROOM,
+        params: {
+          id: data.roomId,
+        },
+      });
 
-    gameStore.setRoom(roomId, name);
-  });
+      gameStore.setRoom(data.roomId, data.name);
+    }
+  );
 });
 </script>
 

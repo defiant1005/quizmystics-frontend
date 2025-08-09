@@ -5,19 +5,27 @@ import { ElNotification } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { RouteNames } from "@/router/routes";
 import { useGameStore } from "@/modules/game/store";
+
+import { useCharacterStore } from "@/modules/character/store";
 import {
   ClientToServerEvents,
   ServerToClientEvents,
   SocketErrorPayload,
   SocketErrorSlug,
-} from "@/modules/socket/types";
+} from "@/modules/game/types/socket-types";
+import { IUpdatePlayersResponse } from "@/modules/game/types/server-client-response-types";
+import {
+  IGetPlayersParams,
+  IInterRoomParams,
+} from "@/modules/game/types/client-server-response-types";
 
 const route = useRoute();
 const router = useRouter();
 const gameStore = useGameStore();
+const characterStore = useCharacterStore();
 
 const getDefaultData = async () => {
-  const promises = [gameStore.getCharacters()];
+  const promises = [characterStore.getCharacters().then()];
 
   await Promise.all(promises);
 };
@@ -26,19 +34,26 @@ onMounted(async () => {
   await getDefaultData();
 
   if (gameStore.room && gameStore.name) {
-    socket.emit(ClientToServerEvents.ENTER_ROOM, {
+    const enterRoomParams: IInterRoomParams = {
       roomId: gameStore.room,
       name: gameStore.name,
-    });
+    };
 
-    socket.emit(ClientToServerEvents.GET_PLAYERS, {
+    socket.emit(ClientToServerEvents.ENTER_ROOM, enterRoomParams);
+
+    const params: IGetPlayersParams = {
       roomId: gameStore.room,
-    });
+    };
+
+    socket.emit(ClientToServerEvents.GET_PLAYERS, params);
   }
 
-  socket.on(ServerToClientEvents.SET_PLAYERS, ({ players }) => {
-    gameStore.changePlayersCount(players);
-  });
+  socket.on(
+    ServerToClientEvents.UPDATE_PLAYERS,
+    (data: IUpdatePlayersResponse) => {
+      gameStore.updatePlayers(data.players);
+    }
+  );
 
   socket.on(
     ServerToClientEvents.ERROR,
@@ -59,10 +74,6 @@ onMounted(async () => {
       }
     }
   );
-
-  socket.on(ServerToClientEvents.CHANGE_PLAYERS_COUNT, ({ players }) => {
-    gameStore.changePlayersCount(players);
-  });
 });
 </script>
 

@@ -1,20 +1,3 @@
-export interface IPlayer {
-  id: string;
-  username: string;
-  characterId: number;
-  isAdmin?: boolean;
-}
-
-export interface IEnterRoomForm {
-  name: string;
-  roomId: string;
-  characterId: number | "";
-}
-
-export interface ICreateRoomForm extends Omit<IEnterRoomForm, "roomId"> {}
-
-export type CharacterLives = 1 | 2 | 3;
-
 export enum AbilitySlug {
   LUCK = "luck",
   FREEZE = "freeze",
@@ -42,17 +25,4 @@ export interface IAbility {
 
 export interface ICharacterAbility extends IAbility {
   cooldown: number;
-}
-
-export interface ICharacter {
-  id: number;
-  title: string;
-  description: string;
-  luck: number;
-  lives: CharacterLives;
-  abilities: ICharacterAbility[];
-}
-
-export interface ICharacterResponse {
-  data: ICharacter[];
 }

@@ -1,6 +1,6 @@
 import { reactive, ref } from "vue";
-import { IEnterRoomForm } from "@/modules/game/types";
 import { FormInstance, FormRules } from "element-plus";
+import { IEnterRoomForm } from "@/modules/game/types/frontend-types";
 
 export function useEnterRoomForm() {
   const enterRoomForm = reactive<IEnterRoomForm>({

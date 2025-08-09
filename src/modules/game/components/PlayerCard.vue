@@ -1,16 +1,14 @@
 <script lang="ts" setup>
 import { computed, PropType, ref } from "vue";
-import { ICharacter, IPlayer } from "@/modules/game/types";
+import { IPlayer } from "@/modules/game/types/game-types";
 import { useGameStore } from "@/modules/game/store";
 
-import avatar1 from "@/assets/avatars/model1.png";
-import avatar2 from "@/assets/avatars/model2.png";
-import avatar3 from "@/assets/avatars/model3.png";
-import avatar4 from "@/assets/avatars/model4.png";
-import avatar5 from "@/assets/avatars/model5.png";
-import avatar6 from "@/assets/avatars/model6.png";
-import avatar7 from "@/assets/avatars/model7.png";
-import avatar8 from "@/assets/avatars/model8.png";
+import socket from "@/package/config/socket";
+import { useCharacterStore } from "@/modules/character/store";
+import { ClientToServerEvents } from "@/modules/game/types/socket-types";
+import { IChangePlayerReadyParams } from "@/modules/game/types/client-server-response-types";
+import { AVATARS } from "@/modules/constants";
+import { ICharacter } from "@/modules/character/types";
 
 const props = defineProps({
   player: {
@@ -20,23 +18,13 @@ const props = defineProps({
 });
 
 const gameStore = useGameStore();
+const characterStore = useCharacterStore();
 
 const character = computed<ICharacter>(() =>
-  gameStore.characters.find(
+  characterStore.characters.find(
     (character) => character.id === props.player!.characterId
   )
 );
-
-const avatars = [
-  avatar1,
-  avatar2,
-  avatar3,
-  avatar4,
-  avatar5,
-  avatar6,
-  avatar7,
-  avatar8,
-];
 
 defineOptions({
   name: "PlayerCard",
@@ -46,16 +34,27 @@ const isReady = ref(false);
 
 const toggleReady = () => {
   isReady.value = !isReady.value;
+
+  const changePlayerReadyParams: IChangePlayerReadyParams = {
+    roomId: gameStore.room as string,
+    isReady: isReady.value,
+    username: gameStore.name as string,
+  };
+
+  socket.emit(
+    ClientToServerEvents.CHANGE_PLAYER_READY,
+    changePlayerReadyParams
+  );
 };
 
-const modelAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+const modelAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
 
 const isCurrentUser = computed(() => gameStore.name === props.player?.username);
 </script>
 
 <template>
-  <div class="player-card" :class="{ 'player-card_ready': isReady }">
-    <div v-if="isReady" class="ready-badge">✅ Готов</div>
+  <div class="player-card" :class="{ 'player-card_ready': player.isReady }">
+    <div v-if="player.isReady" class="ready-badge">✅ Готов</div>
 
     <div class="header">
       <div class="avatar" :class="{ 'current-user': isCurrentUser }">

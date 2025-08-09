@@ -2,14 +2,14 @@ export enum ClientToServerEvents {
   CREATE_ROOM = "createRoom",
   ENTER_ROOM = "enterRoom",
   GET_PLAYERS = "getPlayers",
+  CHANGE_PLAYER_READY = "changePlayerReady",
   DISCONNECT = "disconnect",
 }
 
 export enum ServerToClientEvents {
   ROOM_CREATED = "roomCreated",
-  CHANGE_PLAYERS_COUNT = "changePlayersCount",
-  PLAYER_JOINED = "playerJoined",
-  SET_PLAYERS = "setPlayers",
+  UPDATE_PLAYERS = "updatePlayers",
+  SUCCESS_ENTER = "successEnter",
 
   ERROR = "error",
 }
@@ -17,9 +17,10 @@ export enum ServerToClientEvents {
 export enum SocketErrorSlug {
   ALREADY_EXISTS = "already_exists",
   NOT_FOUND = "not_found",
+  VALIDATE_ERROR = "validate_error",
   ROOM_NOT_FOUND = "room_not_found",
   GAME_IN_PROGRESS = "game_in_progress",
-  ALREADY_IN_ROOM = "already_in_room",
+  NAME_TAKEN = "name_taken",
 }
 
 export interface SocketErrorPayload {

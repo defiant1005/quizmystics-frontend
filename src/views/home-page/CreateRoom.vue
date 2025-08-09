@@ -4,13 +4,16 @@ import { useGameStore } from "@/modules/game/store";
 import { computed, onMounted } from "vue";
 import { FormInstance } from "element-plus";
 import socket from "@/package/config/socket";
-import {
-  ClientToServerEvents,
-  ServerToClientEvents,
-} from "@/modules/socket/types";
 import { generateRandomUppercaseString } from "@/package/helpers/generate-random-uppercase-string";
 import { useRouter } from "vue-router";
 import { RouteNames } from "@/router/routes";
+import { useCharacterStore } from "@/modules/character/store";
+import { IRoomCreatedResponse } from "@/modules/game/types/server-client-response-types";
+import { ICreateRoomParams } from "@/modules/game/types/client-server-response-types";
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from "@/modules/game/types/socket-types";
 
 defineOptions({
   name: "CreateRoom",
@@ -19,9 +22,10 @@ defineOptions({
 const { createRoomFormRef, createRoomForm, rules } = useCreateRoomForm();
 
 const gameStore = useGameStore();
+const characterStore = useCharacterStore();
 const router = useRouter();
 
-const characterOptions = computed(() => gameStore.characterOptions);
+const characterOptions = computed(() => characterStore.characterOptions);
 
 const submitForm = async (formEl: FormInstance | undefined) => {
   if (!formEl) {
@@ -32,24 +36,29 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (valid) {
       const roomId = generateRandomUppercaseString();
 
-      socket.emit(ClientToServerEvents.CREATE_ROOM, {
+      const createRoomParams: ICreateRoomParams = {
         name: createRoomForm.name,
         roomId: roomId,
-        characterId: createRoomForm.characterId,
-      });
+        characterId: createRoomForm.characterId as number,
+      };
+
+      socket.emit(ClientToServerEvents.CREATE_ROOM, createRoomParams);
     }
   });
 };
 
 onMounted(() => {
-  socket.on(ServerToClientEvents.ROOM_CREATED, ({ roomId, socketId, name }) => {
-    router.push({
-      name: RouteNames.CURRENT_ROOM,
-      params: { id: roomId },
-    });
+  socket.on(
+    ServerToClientEvents.ROOM_CREATED,
+    (response: IRoomCreatedResponse) => {
+      router.push({
+        name: RouteNames.CURRENT_ROOM,
+        params: { id: response.roomId },
+      });
 
-    gameStore.setRoom(roomId, name);
-  });
+      gameStore.setRoom(response.roomId, response.name);
+    }
+  );
 });
 </script>
 

@@ -63,29 +63,29 @@ yarn stylelint
 │   │       ├── api/
 │   │       ├── components/
 │   │       ├── composables/
-│   │       ├── constants//index.ts
+│   │       ├── constants//game-types.ts
 │   │       ├── helpers/
 │   │       ├── usecases/
-│   │       ├── types/index.ts
-│   │       └── store/index.ts
+│   │       ├── types/game-types.ts
+│   │       └── store/game-types.ts
 │   ├── package/                # Конфигурации и вспомогательные файлы
 │   │   ├── config/
 │   │   │   └── axios.ts        # Настройки запросов
 │   │   ├── global-helpers/          
-│   │   │   └── index.ts        # Глобальные вспомогательные функции
+│   │   │   └── game-types.ts        # Глобальные вспомогательные функции
 │   │   ├── global-api/         
-│   │   │   └── index.ts        # Глобальные API запросы
+│   │   │   └── game-types.ts        # Глобальные API запросы
 │   │   ├── composables/        # Глобальные кастомные хуки и логика
 │   │   │   └── useComposable.ts
 │   │   ├── stores/             # Сторы для глобальных данных
-│   │   │   └── index.ts
+│   │   │   └── game-types.ts
 │   │   ├── global-types/         
-│   │   │   └── index.ts        # Глобальные интерфейсы и типы
+│   │   │   └── game-types.ts        # Глобальные интерфейсы и типы
 │   │   ├── global-components/  # Глобальные компоненты
 │   │   ├── global-usecases/    # Вспомогательные разовые функции
-│   │   │   └── index.ts
+│   │   │   └── game-types.ts
 │   │   └── global-constants  
-│   │       └── index.ts        # Глобальные константы
+│   │       └── game-types.ts        # Глобальные константы
 │   │
 │   ├── ui-kit/                 # Глобальные UI-компоненты
 │   │   ├── buttons/
