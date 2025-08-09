@@ -41,7 +41,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 };
 
 onMounted(() => {
-  socket.on(ServerToClientEvents.PLAYER_JOINED, ({ roomId, socketId }) => {
+  socket.on(ServerToClientEvents.SET_PLAYERS, ({ roomId, name }) => {
     router.replace({
       name: RouteNames.CURRENT_ROOM,
       params: {
@@ -49,7 +49,7 @@ onMounted(() => {
       },
     });
 
-    gameStore.setRoom(roomId, socketId);
+    gameStore.setRoom(roomId, name);
   });
 });
 </script>

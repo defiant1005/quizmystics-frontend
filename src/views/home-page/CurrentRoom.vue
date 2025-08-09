@@ -64,6 +64,10 @@ onMounted(() => {});
 <style lang="scss" scoped>
 .create-room {
   .main-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
     > p {
       display: flex;
       gap: 4px;
@@ -81,6 +85,12 @@ onMounted(() => {});
         color: rgb(133 206 97);
       }
     }
+  }
+
+  &__players-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 }
 </style>

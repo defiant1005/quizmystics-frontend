@@ -7,7 +7,7 @@ export const useGameStore = defineStore("game-store", {
   state: () => ({
     players: [] as IPlayer[],
     room: localStorage.getItem("room") as string | null,
-    socketId: localStorage.getItem("socketId") as string | null,
+    name: localStorage.getItem("name") as string | null,
     characters: [] as ICharacter[],
   }),
 
@@ -25,12 +25,12 @@ export const useGameStore = defineStore("game-store", {
       this.players = players;
     },
 
-    setRoom(roomId: string, socketId: string) {
+    setRoom(roomId: string, name: string) {
       this.room = roomId;
       localStorage.setItem("room", roomId);
 
-      this.socketId = socketId;
-      localStorage.setItem("socketId", socketId);
+      this.name = name;
+      localStorage.setItem("name", name);
     },
 
     async getCharacters() {

@@ -25,10 +25,10 @@ const getDefaultData = async () => {
 onMounted(async () => {
   await getDefaultData();
 
-  if (gameStore.room && gameStore.socketId) {
+  if (gameStore.room && gameStore.name) {
     socket.emit(ClientToServerEvents.ENTER_ROOM, {
       roomId: gameStore.room,
-      socketId: gameStore.socketId,
+      name: gameStore.name,
     });
 
     socket.emit(ClientToServerEvents.GET_PLAYERS, {

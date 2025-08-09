@@ -42,13 +42,13 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 };
 
 onMounted(() => {
-  socket.on(ServerToClientEvents.ROOM_CREATED, ({ roomId, socketId }) => {
+  socket.on(ServerToClientEvents.ROOM_CREATED, ({ roomId, socketId, name }) => {
     router.push({
       name: RouteNames.CURRENT_ROOM,
       params: { id: roomId },
     });
 
-    gameStore.setRoom(roomId, socketId);
+    gameStore.setRoom(roomId, name);
   });
 });
 </script>

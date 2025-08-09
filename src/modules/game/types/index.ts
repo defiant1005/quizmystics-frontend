@@ -1,7 +1,8 @@
 export interface IPlayer {
   id: string;
   username: string;
-  character: null;
+  characterId: number;
+  isAdmin?: boolean;
 }
 
 export interface IEnterRoomForm {
