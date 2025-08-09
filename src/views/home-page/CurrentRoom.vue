@@ -1,10 +1,17 @@
 <script lang="ts" setup>
 import { useRouteParams } from "@vueuse/router";
 import { Check, CopyDocument } from "@element-plus/icons-vue";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { ElNotification } from "element-plus";
 import { useGameStore } from "@/modules/game/store";
 import PlayerCard from "@/modules/game/components/PlayerCard.vue";
+import GameTimer from "@/modules/game/components/GameTimer.vue";
+import socket from "@/package/config/socket";
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from "@/modules/game/types/socket-types";
+import { IClientServerParams } from "@/modules/game/types/client-server-response-types";
 
 defineOptions({
   name: "CurrentRoom",
@@ -14,6 +21,8 @@ const isCheck = ref(false);
 
 const gameStore = useGameStore();
 const playersList = computed(() => gameStore.players);
+
+const isHost = computed(() => gameStore.isHost);
 
 const currentIcon = computed(() => (isCheck.value ? Check : CopyDocument));
 
@@ -33,6 +42,30 @@ const copyRoomId = async () => {
     console.error(error);
   }
 };
+
+const isGameStart = ref(false);
+
+const startGame = () => {
+  if (!isHost.value) {
+    return;
+  }
+
+  const params: IClientServerParams = {
+    roomId: gameStore.room as string,
+  };
+
+  socket.emit(ClientToServerEvents.CHOOSING_CATEGORY, params);
+};
+
+onMounted(() => {
+  socket.on(ServerToClientEvents.START_GAME, () => {
+    isGameStart.value = true;
+  });
+
+  socket.on(ServerToClientEvents.CATEGORY_TURN, (payload: unknown) => {
+    console.log(payload);
+  });
+});
 </script>
 
 <template>
@@ -55,6 +88,8 @@ const copyRoomId = async () => {
           :player="player"
         />
       </div>
+
+      <GameTimer v-if="isGameStart" @finishTimer="startGame" />
     </div>
   </div>
 </template>

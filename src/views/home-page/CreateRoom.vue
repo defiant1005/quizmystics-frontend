@@ -56,7 +56,7 @@ onMounted(() => {
         params: { id: response.roomId },
       });
 
-      gameStore.setRoom(response.roomId, response.name);
+      gameStore.setRoom(response.roomId, response.name, response.isHost);
     }
   );
 });

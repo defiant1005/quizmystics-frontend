@@ -7,6 +7,7 @@ export enum RouteNames {
   CREATE_ROOM = "CreateRoom",
   CURRENT_ROOM = "CurrentRoom",
   ENTER_ROOM = "EnterRoom",
+  CHOOSING_CATEGORY = "ChoosingCategory",
 }
 
 export const RoutePaths: Record<RouteNames, string> = {
@@ -15,6 +16,7 @@ export const RoutePaths: Record<RouteNames, string> = {
   [RouteNames.CREATE_ROOM]: "/create-room",
   [RouteNames.CURRENT_ROOM]: "/room/:id",
   [RouteNames.ENTER_ROOM]: "/enter-room",
+  [RouteNames.CHOOSING_CATEGORY]: "/choosing-category",
   [RouteNames.NOT_FOUND]: "/:pathMatch(.*)*",
 };
 
@@ -50,6 +52,11 @@ export const routes: RouteRecordRaw[] = [
         path: RoutePaths.EnterRoom,
         name: RouteNames.ENTER_ROOM,
         component: () => import("@/views/home-page/EnterRoom.vue"),
+      },
+      {
+        path: RoutePaths.ChoosingCategory,
+        name: RouteNames.CHOOSING_CATEGORY,
+        component: () => import("@/views/ChoosingCategory.vue"),
       },
     ],
   },

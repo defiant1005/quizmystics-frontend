@@ -6,6 +6,7 @@ export const useGameStore = defineStore("game-store", {
     players: [] as IPlayer[],
     room: localStorage.getItem("room") as string | null,
     name: localStorage.getItem("name") as string | null,
+    isHost: false,
   }),
 
   actions: {
@@ -13,12 +14,14 @@ export const useGameStore = defineStore("game-store", {
       this.players = players;
     },
 
-    setRoom(roomId: string, name: string) {
+    setRoom(roomId: string, name: string, isHost: boolean = false) {
       this.room = roomId;
       localStorage.setItem("room", roomId);
 
       this.name = name;
       localStorage.setItem("name", name);
+
+      this.isHost = isHost;
     },
   },
 });

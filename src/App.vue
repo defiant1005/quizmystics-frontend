@@ -74,6 +74,14 @@ onMounted(async () => {
       }
     }
   );
+
+  socket.on(ServerToClientEvents.GAME_OVER, () => {
+    ElNotification({
+      title: "Игра закончена",
+      type: "success",
+      position: "bottom-right",
+    });
+  });
 });
 </script>
 
