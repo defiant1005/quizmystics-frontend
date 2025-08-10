@@ -12,6 +12,9 @@ import {
   ServerToClientEvents,
 } from "@/modules/game/types/socket-types";
 import { IClientServerParams } from "@/modules/game/types/client-server-response-types";
+import { ICategoryTurnResponse } from "@/modules/game/types/server-client-response-types";
+import router from "@/router";
+import { RouteNames } from "@/router/routes";
 
 defineOptions({
   name: "CurrentRoom",
@@ -62,9 +65,15 @@ onMounted(() => {
     isGameStart.value = true;
   });
 
-  socket.on(ServerToClientEvents.CATEGORY_TURN, (payload: unknown) => {
-    console.log(payload);
-  });
+  socket.on(
+    ServerToClientEvents.CATEGORY_TURN,
+    (payload: ICategoryTurnResponse) => {
+      gameStore.categoryTurn(payload.chooser, payload.categories);
+      router.replace({
+        name: RouteNames.CHOOSING_CATEGORY,
+      });
+    }
+  );
 });
 </script>
 
@@ -85,6 +94,7 @@ onMounted(() => {
         <PlayerCard
           v-for="player in playersList"
           :key="player.id"
+          :is-game-start="isGameStart"
           :player="player"
         />
       </div>

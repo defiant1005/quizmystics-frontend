@@ -15,6 +15,11 @@ const props = defineProps({
     type: Object as PropType<IPlayer>,
     required: true,
   },
+
+  isGameStart: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const gameStore = useGameStore();
@@ -93,6 +98,7 @@ const isCurrentUser = computed(() => gameStore.name === props.player?.username);
 
     <button
       v-if="isCurrentUser"
+      :disabled="isGameStart"
       type="button"
       class="ready-btn"
       @click="toggleReady"
