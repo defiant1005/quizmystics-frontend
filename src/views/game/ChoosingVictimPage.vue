@@ -1,9 +1,26 @@
 <script lang="ts" setup>
-import { computed, reactive, ref, watch } from "vue";
+import {
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import { ElNotification } from "element-plus";
 import { useGameStore } from "@/modules/game/store";
 import type { IPlayer } from "@/modules/game/types/game-types";
-import type { ISpellInfo } from "@/modules/game/types/server-client-response-types";
+import type {
+  IAbilitiesResolved,
+  IActionsReceived,
+  ISpellInfo,
+} from "@/modules/game/types/server-client-response-types";
+import socket from "@/package/config/socket";
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from "@/modules/game/types/socket-types";
+import { IUseAbilityParams } from "@/modules/game/types/client-server-response-types";
 
 defineOptions({ name: "ChoosingVictimPage" });
 
@@ -14,6 +31,7 @@ const spells = computed<ISpellInfo[]>(() => gameStore.spells || []);
 const me = computed(() => gameStore.name);
 const roomId = computed(() => (gameStore.room as string) || "");
 
+// selection state: abilityId -> { use, target }
 const selection = reactive<Record<number, { use: boolean; target?: string }>>(
   {}
 );
@@ -35,6 +53,15 @@ function initSelection() {
 initSelection();
 watch(spells, () => initSelection(), { immediate: true });
 
+const sending = ref(false);
+const waiting = ref(false);
+const submittedCount = ref(0);
+const totalCount = ref(0);
+
+const remainingCount = computed(() =>
+  Math.max(0, (totalCount.value || 0) - (submittedCount.value || 0))
+);
+
 const isValidSubmission = computed(() => {
   for (const s of spells.value) {
     const sel = selection[s.id];
@@ -50,8 +77,6 @@ const isValidSubmission = computed(() => {
 const hasAnySelection = computed(() => {
   return spells.value.some((s) => selection[s.id]?.use);
 });
-
-const sending = ref(false);
 
 function onUseChange(abilityId: number) {
   if (!selection[abilityId].use) {
@@ -96,15 +121,15 @@ async function submitSelection() {
 
   sending.value = true;
   try {
-    const payload = {
+    const payload: IUseAbilityParams = {
       roomId: roomId.value,
-      username: me.value,
+      username: me.value as string,
       actions,
     };
 
-    // socket.emit('useAbilities', payload); // <-- раскомментируй и используй свой эвент
-    console.log("useAbilities", payload);
+    socket.emit(ClientToServerEvents.USE_ABILITIES, payload);
 
+    // пока ждём подтверждения от сервера — не показываем локально, дождёмся ACTIONS_RECEIVED
     ElNotification({
       title: "Отправлено",
       message: actions.length
@@ -114,6 +139,7 @@ async function submitSelection() {
       position: "bottom-right",
     });
 
+    // очищаем локальные отметки (карточки исчезнут при waiting=true)
     for (const a of actions) {
       selection[a.abilityId].use = false;
       selection[a.abilityId].target = undefined;
@@ -140,6 +166,41 @@ function cooldownText(spell: ISpellInfo) {
   }
   return `Появится через ${spell.remaining} ход(а)`;
 }
+
+/* === socket handlers === */
+function onActionsReceived(params: IActionsReceived) {
+  // Показываем баннер ожидания и прячем UI способностей
+  submittedCount.value = params.submittedCount;
+  totalCount.value = params.total;
+  waiting.value = true;
+}
+
+function onAbilitiesResolved(params: IAbilitiesResolved) {
+  // Скрываем баннер ожидания, показываем UI обратно
+  waiting.value = false;
+  submittedCount.value = 0;
+  totalCount.value = 0;
+
+  ElNotification({
+    title: "Раунд завершён",
+    message: "Результаты применённых способностей получены.",
+    type: "info",
+    position: "bottom-right",
+  });
+
+  // здесь можно также обработать params.results / params.cooldowns в сторе
+  // например: gameStore.applyResolvedAbilities(params);
+}
+
+onMounted(() => {
+  socket.on(ServerToClientEvents.ACTIONS_RECEIVED, onActionsReceived);
+  socket.on(ServerToClientEvents.ABILITIES_RESOLVED, onAbilitiesResolved);
+});
+
+onBeforeUnmount(() => {
+  socket.off(ServerToClientEvents.ACTIONS_RECEIVED, onActionsReceived);
+  socket.off(ServerToClientEvents.ABILITIES_RESOLVED, onAbilitiesResolved);
+});
 </script>
 
 <template>
@@ -151,8 +212,24 @@ function cooldownText(spell: ISpellInfo) {
       </p>
     </div>
 
+    <!-- WAITING BANNER -->
+    <div v-if="waiting" class="waiting-banner">
+      <div class="banner-inner">
+        <div class="spinner" aria-hidden></div>
+        <div class="text">
+          <div class="title">Ожидаем решения других игроков</div>
+          <div class="sub">
+            Ждём ещё {{ remainingCount }} игрок(а/ов) ({{ submittedCount }}/{{
+              totalCount
+            }})
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="content">
-      <section class="spells">
+      <!-- SPELLS: скрывается когда waiting=true -->
+      <section v-if="!waiting" class="spells">
         <div v-if="!spells.length" class="empty">
           У вас нет доступных способностей
         </div>
@@ -240,7 +317,7 @@ function cooldownText(spell: ISpellInfo) {
           <button
             type="button"
             class="btn btn-ghost"
-            :disabled="sending"
+            :disabled="sending || waiting"
             @click="
               () => {
                 for (const s of spells) {
@@ -256,7 +333,9 @@ function cooldownText(spell: ISpellInfo) {
           <button
             class="btn btn-primary"
             type="button"
-            :disabled="sending || !isValidSubmission || !hasAnySelection"
+            :disabled="
+              sending || waiting || !isValidSubmission || !hasAnySelection
+            "
             @click="submitSelection"
           >
             {{ sending ? "Отправка..." : "Подтвердить действия" }}
@@ -294,6 +373,48 @@ function cooldownText(spell: ISpellInfo) {
     }
   }
 
+  /* Waiting banner */
+  .waiting-banner {
+    padding: 12px;
+    margin-bottom: 12px;
+    background: linear-gradient(90deg, rgb(0 0 0 / 35%), rgb(0 0 0 / 25%));
+    border: 1px solid rgb(255 255 255 / 3%);
+    border-radius: 10px;
+
+    .banner-inner {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+
+      .spinner {
+        width: 36px;
+        height: 36px;
+        border: 4px solid rgb(255 255 255 / 8%);
+        border-top-color: #ffd54f;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .text {
+        .title {
+          font-weight: 700;
+        }
+
+        .sub {
+          margin-top: 4px;
+          font-size: 13px;
+          color: #d0d0d0;
+        }
+      }
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .content {
     display: grid;
     grid-template-columns: 1fr 320px;
@@ -301,6 +422,7 @@ function cooldownText(spell: ISpellInfo) {
     align-items: start;
   }
 
+  /* rest of styles (kept the same) */
   .spells {
     .empty {
       padding: 2rem;
@@ -505,6 +627,7 @@ function cooldownText(spell: ISpellInfo) {
     }
   }
 
+  /* responsive */
   @media (width <= 1024px) {
     .content {
       grid-template-columns: 1fr 300px;
@@ -541,10 +664,6 @@ function cooldownText(spell: ISpellInfo) {
 
     .spell-card {
       padding: 16px;
-    }
-
-    .spell-desc {
-      font-size: 14px;
     }
 
     .header h2 {

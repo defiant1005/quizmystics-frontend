@@ -56,3 +56,19 @@ export interface IGetSpellsResponse {
   username: string;
   spells: ISpellInfo[];
 }
+
+export interface IActionsReceived {
+  submittedCount: number;
+  total: number;
+}
+
+export interface IAbilitiesResolved {
+  results: Array<{
+    from: string;
+    to: string;
+    abilityId: number;
+    success: boolean;
+    reason?: string;
+  }>;
+  cooldowns: Record<string, Record<number, number>>;
+}
