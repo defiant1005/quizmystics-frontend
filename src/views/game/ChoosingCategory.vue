@@ -6,14 +6,23 @@ import {
   ClientToServerEvents,
   ServerToClientEvents,
 } from "@/modules/game/types/socket-types";
-import { IGetQuestionsParams } from "@/modules/game/types/client-server-response-types";
-import { IGameQuestion } from "@/modules/game/types/server-client-response-types";
+import {
+  IGetQuestionsParams,
+  IGetSpellInfoParams,
+} from "@/modules/game/types/client-server-response-types";
+import {
+  IGameQuestion,
+  IGetSpellsResponse,
+} from "@/modules/game/types/server-client-response-types";
+import { useRouter } from "vue-router";
+import { RouteNames } from "@/router/routes";
 
 defineOptions({
   name: "ChoosingCategory",
 });
 
 const gameStore = useGameStore();
+const router = useRouter();
 
 const isMeChooser = computed(() => gameStore.isMeChooser);
 const currentCategories = computed(() => gameStore.currentCategories);
@@ -33,9 +42,27 @@ function chooseCategory(categoryId: number) {
 }
 
 onMounted(() => {
-  socket.on(ServerToClientEvents.NEW_QUESTION, (data: IGameQuestion) => {
+  socket.on(ServerToClientEvents.NEW_QUESTION, async (data: IGameQuestion) => {
     gameStore.setGameQuestion(data);
+
+    const params: IGetSpellInfoParams = {
+      roomId: gameStore.room as string,
+      username: gameStore.name as string,
+    };
+
+    socket.emit(ClientToServerEvents.GET_SPELL_INFO, params);
   });
+
+  socket.on(
+    ServerToClientEvents.SPELL_INFO,
+    async (data: IGetSpellsResponse) => {
+      gameStore.setSpells(data.spells);
+
+      await router.replace({
+        name: RouteNames.CHOOSING_VICTIM_PAGE,
+      });
+    }
+  );
 });
 </script>
 

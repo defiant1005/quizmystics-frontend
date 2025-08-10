@@ -8,6 +8,9 @@ export enum RouteNames {
   CURRENT_ROOM = "CurrentRoom",
   ENTER_ROOM = "EnterRoom",
   CHOOSING_CATEGORY = "ChoosingCategory",
+  GAME_QUESTION_PAGE = "GameQuestionPage",
+  SPELL_PAGE = "SpellPage",
+  CHOOSING_VICTIM_PAGE = "ChoosingVictimPage",
 }
 
 export const RoutePaths: Record<RouteNames, string> = {
@@ -17,6 +20,9 @@ export const RoutePaths: Record<RouteNames, string> = {
   [RouteNames.CURRENT_ROOM]: "/room/:id",
   [RouteNames.ENTER_ROOM]: "/enter-room",
   [RouteNames.CHOOSING_CATEGORY]: "/choosing-category",
+  [RouteNames.GAME_QUESTION_PAGE]: "/game-question",
+  [RouteNames.SPELL_PAGE]: "/spell-page",
+  [RouteNames.CHOOSING_VICTIM_PAGE]: "/choosing-victim-page",
   [RouteNames.NOT_FOUND]: "/:pathMatch(.*)*",
 };
 
@@ -56,7 +62,22 @@ export const routes: RouteRecordRaw[] = [
       {
         path: RoutePaths.ChoosingCategory,
         name: RouteNames.CHOOSING_CATEGORY,
-        component: () => import("@/views/ChoosingCategory.vue"),
+        component: () => import("@/views/game/ChoosingCategory.vue"),
+      },
+      {
+        path: RoutePaths.GameQuestionPage,
+        name: RouteNames.GAME_QUESTION_PAGE,
+        component: () => import("@/views/game/GameQuestionPage.vue"),
+      },
+      {
+        path: RoutePaths.SpellPage,
+        name: RouteNames.SPELL_PAGE,
+        component: () => import("@/views/game/SpellPage.vue"),
+      },
+      {
+        path: RoutePaths.ChoosingVictimPage,
+        name: RouteNames.CHOOSING_VICTIM_PAGE,
+        component: () => import("@/views/game/ChoosingVictimPage.vue"),
       },
     ],
   },

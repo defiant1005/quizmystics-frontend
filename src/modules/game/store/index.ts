@@ -3,6 +3,7 @@ import { IPlayer } from "@/modules/game/types/game-types";
 import {
   ICategory,
   IGameQuestion,
+  ISpellInfo,
 } from "@/modules/game/types/server-client-response-types";
 
 export const useGameStore = defineStore("game-store", {
@@ -17,6 +18,8 @@ export const useGameStore = defineStore("game-store", {
       currentCategories: [] as ICategory[],
 
       currentQuestion: {} as IGameQuestion,
+
+      spells: [] as ISpellInfo[],
     };
   },
 
@@ -48,6 +51,10 @@ export const useGameStore = defineStore("game-store", {
 
     setGameQuestion(question: IGameQuestion) {
       this.currentQuestion = question;
+    },
+
+    setSpells(spells: ISpellInfo[]) {
+      this.spells = spells;
     },
   },
 });

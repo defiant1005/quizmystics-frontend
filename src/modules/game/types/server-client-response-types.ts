@@ -41,3 +41,18 @@ export interface IGameQuestion {
   [AnswerVariant.ANSWER3]: string;
   [AnswerVariant.ANSWER4]: string;
 }
+
+export interface ISpellInfo {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  baseCooldown: number;
+  remaining: number;
+  available: boolean;
+}
+
+export interface IGetSpellsResponse {
+  username: string;
+  spells: ISpellInfo[];
+}
