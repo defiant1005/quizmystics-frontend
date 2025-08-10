@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useCreateRoomForm } from "@/modules/game/composables/use-create-room-form";
 import { useGameStore } from "@/modules/game/store";
-import { computed, onMounted } from "vue";
+import { computed, onBeforeUnmount, onMounted } from "vue";
 import { FormInstance } from "element-plus";
 import socket from "@/package/config/socket";
 import { generateRandomUppercaseString } from "@/package/helpers/generate-random-uppercase-string";
@@ -47,18 +47,21 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   });
 };
 
-onMounted(() => {
-  socket.on(
-    ServerToClientEvents.ROOM_CREATED,
-    (response: IRoomCreatedResponse) => {
-      router.push({
-        name: RouteNames.CURRENT_ROOM,
-        params: { id: response.roomId },
-      });
+function roomCreated(response: IRoomCreatedResponse) {
+  router.push({
+    name: RouteNames.CURRENT_ROOM,
+    params: { id: response.roomId },
+  });
 
-      gameStore.setRoom(response.roomId, response.name, response.isHost);
-    }
-  );
+  gameStore.setRoom(response.roomId, response.name, response.isHost);
+}
+
+onMounted(() => {
+  socket.on(ServerToClientEvents.ROOM_CREATED, roomCreated);
+});
+
+onBeforeUnmount(() => {
+  socket.off(ServerToClientEvents.ROOM_CREATED, roomCreated);
 });
 </script>
 

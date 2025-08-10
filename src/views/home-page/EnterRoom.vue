@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted } from "vue";
+import { computed, onBeforeUnmount, onMounted } from "vue";
 import socket from "@/package/config/socket";
 import { useRouter } from "vue-router";
 import { RouteNames } from "@/router/routes";
@@ -47,20 +47,23 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   });
 };
 
-onMounted(() => {
-  socket.on(
-    ServerToClientEvents.SUCCESS_ENTER,
-    (data: ISuccessEnterResponse) => {
-      router.replace({
-        name: RouteNames.CURRENT_ROOM,
-        params: {
-          id: data.roomId,
-        },
-      });
+function successEnter(data: ISuccessEnterResponse) {
+  router.replace({
+    name: RouteNames.CURRENT_ROOM,
+    params: {
+      id: data.roomId,
+    },
+  });
 
-      gameStore.setRoom(data.roomId, data.name);
-    }
-  );
+  gameStore.setRoom(data.roomId, data.name);
+}
+
+onMounted(() => {
+  socket.on(ServerToClientEvents.SUCCESS_ENTER, successEnter);
+});
+
+onBeforeUnmount(() => {
+  socket.off(ServerToClientEvents.SUCCESS_ENTER, successEnter);
 });
 </script>
 

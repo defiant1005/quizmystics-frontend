@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useGameStore } from "@/modules/game/store";
-import { computed, onMounted } from "vue";
+import { computed, onBeforeUnmount, onMounted } from "vue";
 import socket from "@/package/config/socket";
 import {
   ClientToServerEvents,
@@ -41,28 +41,35 @@ function chooseCategory(categoryId: number) {
   socket.emit(ClientToServerEvents.GET_QUESTIONS, params);
 }
 
-onMounted(() => {
-  socket.on(ServerToClientEvents.NEW_QUESTION, async (data: IGameQuestion) => {
-    gameStore.setGameQuestion(data);
+async function newQuestionHandler(data: IGameQuestion) {
+  gameStore.setGameQuestion(data);
 
-    const params: IGetSpellInfoParams = {
-      roomId: gameStore.room as string,
-      username: gameStore.name as string,
-    };
+  const params: IGetSpellInfoParams = {
+    roomId: gameStore.room as string,
+    username: gameStore.name as string,
+  };
 
-    socket.emit(ClientToServerEvents.GET_SPELL_INFO, params);
+  socket.emit(ClientToServerEvents.GET_SPELL_INFO, params);
+}
+
+async function spellInfoHandler(data: IGetSpellsResponse) {
+  gameStore.setSpells(data.spells);
+
+  await router.replace({
+    name: RouteNames.CHOOSING_VICTIM_PAGE,
   });
+}
 
-  socket.on(
-    ServerToClientEvents.SPELL_INFO,
-    async (data: IGetSpellsResponse) => {
-      gameStore.setSpells(data.spells);
+onMounted(() => {
+  socket.on(ServerToClientEvents.NEW_QUESTION, newQuestionHandler);
 
-      await router.replace({
-        name: RouteNames.CHOOSING_VICTIM_PAGE,
-      });
-    }
-  );
+  socket.on(ServerToClientEvents.SPELL_INFO, spellInfoHandler);
+});
+
+onBeforeUnmount(() => {
+  socket.off(ServerToClientEvents.NEW_QUESTION, newQuestionHandler);
+
+  socket.off(ServerToClientEvents.SPELL_INFO, spellInfoHandler);
 });
 </script>
 

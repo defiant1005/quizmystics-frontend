@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useRouteParams } from "@vueuse/router";
 import { Check, CopyDocument } from "@element-plus/icons-vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { ElNotification } from "element-plus";
 import { useGameStore } from "@/modules/game/store";
 import PlayerCard from "@/modules/game/components/PlayerCard.vue";
@@ -60,20 +60,27 @@ const startGame = () => {
   socket.emit(ClientToServerEvents.CHOOSING_CATEGORY, params);
 };
 
-onMounted(() => {
-  socket.on(ServerToClientEvents.START_GAME, () => {
-    isGameStart.value = true;
-  });
+function startGameHandler() {
+  isGameStart.value = true;
+}
 
-  socket.on(
-    ServerToClientEvents.CATEGORY_TURN,
-    (payload: ICategoryTurnResponse) => {
-      gameStore.categoryTurn(payload.chooser, payload.categories);
-      router.replace({
-        name: RouteNames.CHOOSING_CATEGORY,
-      });
-    }
-  );
+function categoryTurnHandler(payload: ICategoryTurnResponse) {
+  gameStore.categoryTurn(payload.chooser, payload.categories);
+  router.replace({
+    name: RouteNames.CHOOSING_CATEGORY,
+  });
+}
+
+onMounted(() => {
+  socket.on(ServerToClientEvents.START_GAME, startGameHandler);
+
+  socket.on(ServerToClientEvents.CATEGORY_TURN, categoryTurnHandler);
+});
+
+onBeforeUnmount(() => {
+  socket.off(ServerToClientEvents.START_GAME, startGameHandler);
+
+  socket.off(ServerToClientEvents.CATEGORY_TURN, categoryTurnHandler);
 });
 </script>
 

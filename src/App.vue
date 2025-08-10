@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import socket from "@/package/config/socket";
-import { onMounted } from "vue";
+import { onBeforeUnmount, onMounted } from "vue";
 import { ElNotification } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { RouteNames } from "@/router/routes";
@@ -30,6 +30,35 @@ const getDefaultData = async () => {
   await Promise.all(promises);
 };
 
+function updatePlayersHandler(data: IUpdatePlayersResponse) {
+  gameStore.updatePlayers(data.players);
+}
+
+function errorHandler(data: SocketErrorPayload) {
+  ElNotification({
+    title: data.message,
+    type: "error",
+    position: "bottom-right",
+  });
+
+  if (
+    route.name === RouteNames.CURRENT_ROOM &&
+    data.slug === SocketErrorSlug.ALREADY_EXISTS
+  ) {
+    router.replace({
+      name: RouteNames.HOME_VIEW,
+    });
+  }
+}
+
+function gameOverHandler() {
+  ElNotification({
+    title: "Игра закончена",
+    type: "success",
+    position: "bottom-right",
+  });
+}
+
 onMounted(async () => {
   await getDefaultData();
 
@@ -48,40 +77,19 @@ onMounted(async () => {
     socket.emit(ClientToServerEvents.GET_PLAYERS, params);
   }
 
-  socket.on(
-    ServerToClientEvents.UPDATE_PLAYERS,
-    (data: IUpdatePlayersResponse) => {
-      gameStore.updatePlayers(data.players);
-    }
-  );
+  socket.on(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersHandler);
 
-  socket.on(
-    ServerToClientEvents.ERROR,
-    ({ message, slug }: SocketErrorPayload) => {
-      ElNotification({
-        title: message,
-        type: "error",
-        position: "bottom-right",
-      });
+  socket.on(ServerToClientEvents.ERROR, errorHandler);
 
-      if (
-        route.name === RouteNames.CURRENT_ROOM &&
-        slug === SocketErrorSlug.ALREADY_EXISTS
-      ) {
-        router.replace({
-          name: RouteNames.HOME_VIEW,
-        });
-      }
-    }
-  );
+  socket.on(ServerToClientEvents.GAME_OVER, gameOverHandler);
+});
 
-  socket.on(ServerToClientEvents.GAME_OVER, () => {
-    ElNotification({
-      title: "Игра закончена",
-      type: "success",
-      position: "bottom-right",
-    });
-  });
+onBeforeUnmount(() => {
+  socket.off(ServerToClientEvents.UPDATE_PLAYERS, updatePlayersHandler);
+
+  socket.off(ServerToClientEvents.ERROR, errorHandler);
+
+  socket.off(ServerToClientEvents.GAME_OVER, gameOverHandler);
 });
 </script>
 
