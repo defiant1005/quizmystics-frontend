@@ -11,6 +11,7 @@ export enum RouteNames {
   GAME_QUESTION_PAGE = "GameQuestionPage",
   SPELL_PAGE = "SpellPage",
   CHOOSING_VICTIM_PAGE = "ChoosingVictimPage",
+  QUESTION_PAGE = "QuestionPage",
 }
 
 export const RoutePaths: Record<RouteNames, string> = {
@@ -23,6 +24,7 @@ export const RoutePaths: Record<RouteNames, string> = {
   [RouteNames.GAME_QUESTION_PAGE]: "/game-question",
   [RouteNames.SPELL_PAGE]: "/spell-page",
   [RouteNames.CHOOSING_VICTIM_PAGE]: "/choosing-victim-page",
+  [RouteNames.QUESTION_PAGE]: "/question-page",
   [RouteNames.NOT_FOUND]: "/:pathMatch(.*)*",
 };
 
@@ -78,6 +80,11 @@ export const routes: RouteRecordRaw[] = [
         path: RoutePaths.ChoosingVictimPage,
         name: RouteNames.CHOOSING_VICTIM_PAGE,
         component: () => import("@/views/game/ChoosingVictimPage.vue"),
+      },
+      {
+        path: RoutePaths.QuestionPage,
+        name: RouteNames.QUESTION_PAGE,
+        component: () => import("@/views/game/QuestionPage.vue"),
       },
     ],
   },

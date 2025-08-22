@@ -14,8 +14,8 @@ import {
   IVictimAbilities,
   IVictimAbilitiesGroupedByTarget,
 } from "@/modules/game/types/server-client-response-types";
-
-const emit = defineEmits(["finished"]);
+import { RouteNames } from "@/router/routes";
+import { useRouter } from "vue-router";
 
 const gameStore = useGameStore();
 
@@ -26,6 +26,8 @@ const spells = computed<ISpellInfo[]>(() => gameStore.spells ?? []);
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const labelContainerRef = ref<HTMLDivElement | null>(null);
+
+const router = useRouter();
 
 onMounted(async () => {
   await nextTick();
@@ -452,7 +454,10 @@ onMounted(async () => {
     removeCharacter(victim);
     attacker = null;
     victim = null;
-    emit("finished");
+
+    router.replace({
+      name: RouteNames.QUESTION_PAGE,
+    });
   }
 
   function cleanupProjectileLabelAndRemove(proj: THREE.Group) {
