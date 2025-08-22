@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import * as THREE from "three";
-import { onMounted, ref, nextTick, computed } from "vue";
+import { onMounted, ref, nextTick, computed, watch } from "vue";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { AnimationMixer, AnimationClip } from "three";
@@ -9,38 +9,29 @@ import {
   CSS2DObject,
 } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import { useGameStore } from "@/modules/game/store";
+import {
+  ISpellInfo,
+  IVictimAbilities,
+  IVictimAbilitiesGroupedByTarget,
+} from "@/modules/game/types/server-client-response-types";
 
-// <-- runtime emits (eslint: vue/define-emits-declaration)
+// runtime emits
 const emit = defineEmits(["finished"]);
 
-// <-- use your game store here. Если путь к стору другой — поправь импорт
-// например: import { useGameStore } from "@/stores/game";
 const gameStore = useGameStore();
 
-// Типы (вставил из твоего описания)
-export interface IVictimAbilities {
-  from: string;
-  to: string;
-  abilityId: number;
-  success: boolean;
-}
-
-export interface IVictimAbilitiesGroupedByTarget {
-  to: string;
-  hits: IVictimAbilities[];
-}
-
-// получаем реальные данные из стора
+// store-derived data
 const victimAbilitiesGroupedByTarget = computed<
   IVictimAbilitiesGroupedByTarget[]
->(() => gameStore.victimAbilitiesGroupedByTarget);
+>(() => gameStore.victimAbilitiesGroupedByTarget ?? []);
+const spells = computed<ISpellInfo[]>(() => gameStore.spells ?? []);
 
 // refs
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const labelContainerRef = ref<HTMLDivElement | null>(null);
 
 onMounted(async () => {
-  await nextTick(); // ждём привязки всех ref
+  await nextTick(); // ждём привязки ref
 
   const canvas = canvasRef.value!;
   const scene = new THREE.Scene();
@@ -77,7 +68,6 @@ onMounted(async () => {
 
   const controls = new OrbitControls(camera, renderer.domElement);
 
-  // адаптив
   window.addEventListener("resize", () => {
     try {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -103,7 +93,6 @@ onMounted(async () => {
       const model = gltf.scene;
       model.scale.set(scale, scale, scale);
       scene.add(model);
-
       const mixer = new AnimationMixer(model);
       return {
         model,
@@ -190,12 +179,6 @@ onMounted(async () => {
     return label;
   }
 
-  // ability names — если у тебя есть реальная мапа способностей, замени здесь
-  const abilityNames: Record<number, string> = {
-    1: "Lumos Maxima",
-    2: "Expelliarmus",
-  };
-
   type LoadedCharacter = {
     model: THREE.Object3D;
     mixer: AnimationMixer;
@@ -215,11 +198,46 @@ onMounted(async () => {
   let state: "idle" | "projectile" | "impact" = "idle";
 
   // Tunables
-  const projectileSpeed = 0.6; // скорость полёта
-  const walkDuration = 1.2; // вход/шаг в сек
-  const leaveDuration = 1.2; // уход в сек
-  const attackCastDelay = 1.0; // задержка перед кастом после остановки атакующего (сек)
-  const betweenAttackersDelay = 1.4; // пауза между атаками (сек)
+  const projectileSpeed = 0.6;
+  const walkDuration = 1.2;
+  const leaveDuration = 1.2;
+  const attackCastDelay = 1.0;
+  const betweenAttackersDelay = 1.4;
+
+  // Список активных снарядов для обновления названий, когда spells появятся/обновятся
+  const activeProjectiles = new Set<THREE.Group>();
+
+  // При обновлении spells — пробегаем по активным снарядам и обновляем label
+  watch(spells, () => {
+    try {
+      for (const proj of activeProjectiles) {
+        const abilityId = (proj as any).__abilityId as number | undefined;
+        const labelObj = (proj as any).__labelRef as CSS2DObject | undefined;
+        if (abilityId != null && labelObj) {
+          const info = spells.value.find((s) => s.id === abilityId);
+          if (info) {
+            const el = (labelObj as any).element ?? (labelObj as any).element;
+            if (el) {
+              el.textContent = info.title;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to update projectile labels on spells change", err);
+    }
+  });
+
+  function removeProjectileFromActive(proj: THREE.Group | null) {
+    if (!proj) {
+      return;
+    }
+    activeProjectiles.delete(proj);
+  }
+
+  function addProjectileToActive(proj: THREE.Group) {
+    activeProjectiles.add(proj);
+  }
 
   function removeCharacter(char: LoadedCharacter) {
     if (!char) {
@@ -237,10 +255,8 @@ onMounted(async () => {
       mixers.splice(idx, 1);
     }
 
-    // корректное удаление CSS2DObject и его DOM-элемента
     if (char.label) {
       try {
-        // в некоторых сборках element хранится как .element
         const el = (char.label as any).element ?? (char.label as any).element;
         if (el && el.parentNode) {
           el.parentNode.removeChild(el);
@@ -269,7 +285,6 @@ onMounted(async () => {
         "https://threejs.org/examples/models/gltf/Soldier.glb"
       );
     } catch (err) {
-      // если модель не загрузилась — завершаем анимацию корректно
       console.error("Failed to load victim model, finishing animation", err);
       finishAll();
       return;
@@ -363,19 +378,29 @@ onMounted(async () => {
       "Idle",
     ]);
 
-    projectile = createSpellProjectile();
-    projectile.position.copy(attacker.model.position);
-    scene.add(projectile);
+    const proj = createSpellProjectile();
+    proj.position.copy(attacker.model.position);
+    scene.add(proj);
 
-    // label над снарядом (ярче)
+    // label над снарядом — ищем title в spells, если есть
+    const spellInfo = spells.value.find((s) => s.id === hit.abilityId);
+    const initialText = spellInfo?.title ?? `Ability ${hit.abilityId}`;
     const spellDiv = document.createElement("div");
     spellDiv.className = "spell-name";
-    spellDiv.textContent = abilityNames[hit.abilityId] || "Spell";
+    spellDiv.textContent = initialText;
     const spellLabel = new CSS2DObject(spellDiv);
     spellLabel.position.set(0, 4, 0);
-    projectile.add(spellLabel);
-    (projectile as any).__labelRef = spellLabel;
+    proj.add(spellLabel);
 
+    // сохраняем данные для последующего обновления
+    (proj as any).__labelRef = spellLabel;
+    (proj as any).__abilityId = hit.abilityId;
+
+    // регистрируем в активных снарядах
+    addProjectileToActive(proj);
+
+    // start projectile
+    projectile = proj;
     fireProgress = 0;
     (projectile as any).willHit = hit.success;
     state = "projectile";
@@ -442,6 +467,29 @@ onMounted(async () => {
     emit("finished");
   }
 
+  function cleanupProjectileLabelAndRemove(proj: THREE.Group) {
+    try {
+      const lab = (proj as any).__labelRef as CSS2DObject | undefined;
+      if (lab) {
+        const el = (lab as any).element ?? (lab as any).element;
+        if (el && el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to remove projectile label", err);
+    } finally {
+      removeProjectileFromActive(proj);
+      try {
+        if (proj.parent) {
+          scene.remove(proj);
+        }
+      } catch (err) {
+        console.error("Failed to remove projectile from scene", err);
+      }
+    }
+  }
+
   function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
@@ -461,17 +509,9 @@ onMounted(async () => {
       if (fireProgress >= 1) {
         state = "impact";
 
-        // удаляем label снаряда сразу
-        try {
-          const lab = (projectile as any).__labelRef as CSS2DObject | undefined;
-          if (lab) {
-            const el = (lab as any).element ?? (lab as any).element;
-            if (el && el.parentNode) {
-              el.parentNode.removeChild(el);
-            }
-          }
-        } catch (err) {
-          console.error("Failed to remove projectile label", err);
+        // удаляем label снаряда сразу и убираем из activeProjectiles
+        if (projectile) {
+          cleanupProjectileLabelAndRemove(projectile);
         }
 
         if ((projectile as any).willHit) {
@@ -498,7 +538,7 @@ onMounted(async () => {
           const missLabel = new CSS2DObject(missDiv);
           missLabel.position
             .copy(victim!.model.position)
-            .add(new THREE.Vector3(0, 8, 0)); // поднят выше
+            .add(new THREE.Vector3(0, 8, 0));
           scene.add(missLabel);
           setTimeout(() => {
             try {
@@ -516,14 +556,7 @@ onMounted(async () => {
           }, 1400);
         }
 
-        // удаляем снаряд
-        try {
-          if (projectile.parent) {
-            scene.remove(projectile);
-          }
-        } catch (err) {
-          console.error("Failed to remove projectile", err);
-        }
+        // очищаем ссылку на projectile
         projectile = null;
 
         // удаляем атакующего (чтобы не было «двойников»)
@@ -579,7 +612,6 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-/* базовые метки */
 .label {
   font-size: 1.2rem;
   font-weight: bold;
@@ -599,13 +631,13 @@ onMounted(async () => {
   color: #4af;
 }
 
-/* spell-name — сделано ярче и чуть больше */
+/* ability title (was spell-name) — ярче */
 .spell-name {
   position: relative;
   z-index: 2;
   font-size: 1.45rem;
   font-weight: 800;
-  color: #e6fbff; /* поярче */
+  color: #e6fbff;
   text-shadow:
     0 0 20px #9fe6ff,
     0 0 6px rgb(255 255 255 / 40%);
