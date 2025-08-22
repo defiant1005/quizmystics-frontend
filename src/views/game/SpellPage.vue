@@ -8,8 +8,8 @@ defineOptions({
 
 const gameStore = useGameStore();
 
-const victimsAbilitiesResult = computed(
-  () => gameStore.victimsAbilities.results
+const victimAbilitiesGroupedByTarget = computed(
+  () => gameStore.victimAbilitiesGroupedByTarget
 );
 </script>
 
