@@ -62,13 +62,20 @@ export interface IActionsReceived {
   total: number;
 }
 
+export interface IVictimAbilities {
+  from: string;
+  to: string;
+  abilityId: number;
+  success: boolean;
+  // reason?: string;
+}
+
 export interface IAbilitiesResolved {
-  results: Array<{
-    from: string;
-    to: string;
-    abilityId: number;
-    success: boolean;
-    reason?: string;
-  }>;
+  results: IVictimAbilities[];
   cooldowns: Record<string, Record<number, number>>;
+}
+
+export interface IVictimAbilitiesGroupedByTarget {
+  to: string;
+  hits: IVictimAbilities[];
 }

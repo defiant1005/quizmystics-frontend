@@ -21,17 +21,19 @@ import {
   ServerToClientEvents,
 } from "@/modules/game/types/socket-types";
 import { IUseAbilityParams } from "@/modules/game/types/client-server-response-types";
+import { useRouter } from "vue-router";
+import { RouteNames } from "@/router/routes";
 
 defineOptions({ name: "ChoosingVictimPage" });
 
 const gameStore = useGameStore();
+const router = useRouter();
 
 const allPlayers = computed<IPlayer[]>(() => gameStore.players || []);
 const spells = computed<ISpellInfo[]>(() => gameStore.spells || []);
 const me = computed(() => gameStore.name);
 const roomId = computed(() => (gameStore.room as string) || "");
 
-// selection state: abilityId -> { use, target }
 const selection = reactive<Record<number, { use: boolean; target?: string }>>(
   {}
 );
@@ -129,7 +131,6 @@ async function submitSelection() {
 
     socket.emit(ClientToServerEvents.USE_ABILITIES, payload);
 
-    // пока ждём подтверждения от сервера — не показываем локально, дождёмся ACTIONS_RECEIVED
     ElNotification({
       title: "Отправлено",
       message: actions.length
@@ -139,7 +140,6 @@ async function submitSelection() {
       position: "bottom-right",
     });
 
-    // очищаем локальные отметки (карточки исчезнут при waiting=true)
     for (const a of actions) {
       selection[a.abilityId].use = false;
       selection[a.abilityId].target = undefined;
@@ -167,29 +167,18 @@ function cooldownText(spell: ISpellInfo) {
   return `Появится через ${spell.remaining} ход(а)`;
 }
 
-/* === socket handlers === */
 function onActionsReceived(params: IActionsReceived) {
-  // Показываем баннер ожидания и прячем UI способностей
   submittedCount.value = params.submittedCount;
   totalCount.value = params.total;
   waiting.value = true;
 }
 
 function onAbilitiesResolved(params: IAbilitiesResolved) {
-  // Скрываем баннер ожидания, показываем UI обратно
-  waiting.value = false;
-  submittedCount.value = 0;
-  totalCount.value = 0;
+  gameStore.setVictimAbilities(params);
 
-  ElNotification({
-    title: "Раунд завершён",
-    message: "Результаты применённых способностей получены.",
-    type: "info",
-    position: "bottom-right",
+  router.replace({
+    name: RouteNames.SPELL_PAGE,
   });
-
-  // здесь можно также обработать params.results / params.cooldowns в сторе
-  // например: gameStore.applyResolvedAbilities(params);
 }
 
 onMounted(() => {
@@ -212,23 +201,20 @@ onBeforeUnmount(() => {
       </p>
     </div>
 
-    <!-- WAITING BANNER -->
     <div v-if="waiting" class="waiting-banner">
       <div class="banner-inner">
         <div class="spinner" aria-hidden></div>
         <div class="text">
           <div class="title">Ожидаем решения других игроков</div>
           <div class="sub">
-            Ждём ещё {{ remainingCount }} игрок(а/ов) ({{ submittedCount }}/{{
-              totalCount
-            }})
+            Ждём ещё {{ remainingCount }} игрок(а/ов) ({{ submittedCount }}/
+            {{ totalCount }})
           </div>
         </div>
       </div>
     </div>
 
     <div class="content">
-      <!-- SPELLS: скрывается когда waiting=true -->
       <section v-if="!waiting" class="spells">
         <div v-if="!spells.length" class="empty">
           У вас нет доступных способностей
@@ -373,7 +359,6 @@ onBeforeUnmount(() => {
     }
   }
 
-  /* Waiting banner */
   .waiting-banner {
     padding: 12px;
     margin-bottom: 12px;
@@ -422,7 +407,6 @@ onBeforeUnmount(() => {
     align-items: start;
   }
 
-  /* rest of styles (kept the same) */
   .spells {
     .empty {
       padding: 2rem;
@@ -627,7 +611,6 @@ onBeforeUnmount(() => {
     }
   }
 
-  /* responsive */
   @media (width <= 1024px) {
     .content {
       grid-template-columns: 1fr 300px;
