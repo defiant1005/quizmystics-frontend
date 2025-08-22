@@ -15,23 +15,20 @@ import {
   IVictimAbilitiesGroupedByTarget,
 } from "@/modules/game/types/server-client-response-types";
 
-// runtime emits
 const emit = defineEmits(["finished"]);
 
 const gameStore = useGameStore();
 
-// store-derived data
 const victimAbilitiesGroupedByTarget = computed<
   IVictimAbilitiesGroupedByTarget[]
 >(() => gameStore.victimAbilitiesGroupedByTarget ?? []);
 const spells = computed<ISpellInfo[]>(() => gameStore.spells ?? []);
 
-// refs
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const labelContainerRef = ref<HTMLDivElement | null>(null);
 
 onMounted(async () => {
-  await nextTick(); // ждём привязки ref
+  await nextTick();
 
   const canvas = canvasRef.value!;
   const scene = new THREE.Scene();
@@ -53,7 +50,6 @@ onMounted(async () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
 
-  // Label renderer
   const labelRenderer = new CSS2DRenderer();
   labelRenderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -79,7 +75,6 @@ onMounted(async () => {
     }
   });
 
-  // Lights
   scene.add(new THREE.AmbientLight(0xffffff, 0.6));
   const dirLight = new THREE.DirectionalLight(0xffffff, 1);
   dirLight.position.set(5, 10, 7);
@@ -197,17 +192,14 @@ onMounted(async () => {
   let fireProgress = 0;
   let state: "idle" | "projectile" | "impact" = "idle";
 
-  // Tunables
   const projectileSpeed = 0.6;
   const walkDuration = 1.2;
   const leaveDuration = 1.2;
   const attackCastDelay = 1.0;
   const betweenAttackersDelay = 1.4;
 
-  // Список активных снарядов для обновления названий, когда spells появятся/обновятся
   const activeProjectiles = new Set<THREE.Group>();
 
-  // При обновлении spells — пробегаем по активным снарядам и обновляем label
   watch(spells, () => {
     try {
       for (const proj of activeProjectiles) {
@@ -382,7 +374,6 @@ onMounted(async () => {
     proj.position.copy(attacker.model.position);
     scene.add(proj);
 
-    // label над снарядом — ищем title в spells, если есть
     const spellInfo = spells.value.find((s) => s.id === hit.abilityId);
     const initialText = spellInfo?.title ?? `Ability ${hit.abilityId}`;
     const spellDiv = document.createElement("div");
@@ -392,14 +383,11 @@ onMounted(async () => {
     spellLabel.position.set(0, 4, 0);
     proj.add(spellLabel);
 
-    // сохраняем данные для последующего обновления
     (proj as any).__labelRef = spellLabel;
     (proj as any).__abilityId = hit.abilityId;
 
-    // регистрируем в активных снарядах
     addProjectileToActive(proj);
 
-    // start projectile
     projectile = proj;
     fireProgress = 0;
     (projectile as any).willHit = hit.success;
@@ -509,7 +497,6 @@ onMounted(async () => {
       if (fireProgress >= 1) {
         state = "impact";
 
-        // удаляем label снаряда сразу и убираем из activeProjectiles
         if (projectile) {
           cleanupProjectileLabelAndRemove(projectile);
         }
@@ -556,14 +543,11 @@ onMounted(async () => {
           }, 1400);
         }
 
-        // очищаем ссылку на projectile
         projectile = null;
 
-        // удаляем атакующего (чтобы не было «двойников»)
         removeCharacter(attacker);
         attacker = null;
 
-        // длительная пауза между атаками
         setTimeout(() => {
           attackerIndex++;
           showNextAttacker();
@@ -576,7 +560,6 @@ onMounted(async () => {
     labelRenderer.render(scene, camera);
   }
 
-  // стартуем
   showNextVictim();
   animate();
 });

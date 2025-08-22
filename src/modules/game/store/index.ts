@@ -46,6 +46,7 @@ export const useGameStore = defineStore("game-store", {
         }
       }
 
+      //@ts-ignore
       return Array.from(map.entries()).map(([to, hits]) => ({ to, hits }));
     },
   },
